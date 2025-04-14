@@ -2,10 +2,43 @@
 import React, { useState } from 'react';
 import Papa from 'papaparse';
 
+// const PROJECTIONS = [
+//   { code: 'EPSG:4326', name: 'WGS84 (EPSG:4326)' },
+//   { code: 'EPSG:32652', name: 'UTM Zone 52N (EPSG:32652)' },
+//   // Add more projections as needed
+// ];
+
 const PROJECTIONS = [
+  // Base coordinate system
   { code: 'EPSG:4326', name: 'WGS84 (EPSG:4326)' },
+  
+  // Northern hemisphere UTM zones
+  { code: 'EPSG:32646', name: 'UTM Zone 46N (EPSG:32646)' },
+  { code: 'EPSG:32647', name: 'UTM Zone 47N (EPSG:32647)' },
+  { code: 'EPSG:32648', name: 'UTM Zone 48N (EPSG:32648)' },
+  { code: 'EPSG:32649', name: 'UTM Zone 49N (EPSG:32649)' },
+  { code: 'EPSG:32650', name: 'UTM Zone 50N (EPSG:32650)' },
+  { code: 'EPSG:32651', name: 'UTM Zone 51N (EPSG:32651)' },
   { code: 'EPSG:32652', name: 'UTM Zone 52N (EPSG:32652)' },
-  // Add more projections as needed
+  { code: 'EPSG:32653', name: 'UTM Zone 53N (EPSG:32653)' },
+  { code: 'EPSG:32654', name: 'UTM Zone 54N (EPSG:32654)' },
+  { code: 'EPSG:32655', name: 'UTM Zone 55N (EPSG:32655)' },
+  { code: 'EPSG:32656', name: 'UTM Zone 56N (EPSG:32656)' },
+  { code: 'EPSG:32657', name: 'UTM Zone 57N (EPSG:32657)' },
+  
+  // Southern hemisphere UTM zones
+  { code: 'EPSG:32746', name: 'UTM Zone 46S (EPSG:32746)' },
+  { code: 'EPSG:32747', name: 'UTM Zone 47S (EPSG:32747)' },
+  { code: 'EPSG:32748', name: 'UTM Zone 48S (EPSG:32748)' },
+  { code: 'EPSG:32749', name: 'UTM Zone 49S (EPSG:32749)' },
+  { code: 'EPSG:32750', name: 'UTM Zone 50S (EPSG:32750)' },
+  { code: 'EPSG:32751', name: 'UTM Zone 51S (EPSG:32751)' },
+  { code: 'EPSG:32752', name: 'UTM Zone 52S (EPSG:32752)' },
+  { code: 'EPSG:32753', name: 'UTM Zone 53S (EPSG:32753)' },
+  { code: 'EPSG:32754', name: 'UTM Zone 54S (EPSG:32754)' },
+  { code: 'EPSG:32755', name: 'UTM Zone 55S (EPSG:32755)' },
+  { code: 'EPSG:32756', name: 'UTM Zone 56S (EPSG:32756)' },
+  { code: 'EPSG:32757', name: 'UTM Zone 57S (EPSG:32757)' }
 ];
 
 const FileUploader = ({ onBlockModelUpload, onElevationDataUpload, onPitDataUpload }) => {
@@ -78,35 +111,88 @@ const FileUploader = ({ onBlockModelUpload, onElevationDataUpload, onPitDataUplo
 
   const processElevationFile = () => {
     if (!elevationFile) {
-      setError('Please select an elevation CSV file');
+      setError('Please select an elevation STR file');
       return;
     }
 
     setIsLoading(true);
     setSuccess('');
 
-    Papa.parse(elevationFile, {
-      header: true,
+    // OLD
+    // Papa.parse(elevationFile, {
+    //   header: true,
+    //   skipEmptyLines: true,
+    //   dynamicTyping: true,
+    //   complete: (results) => {
+    //     setIsLoading(false);
+    //     console.log('PREPROCESS', results)
+        
+    //     if (results.errors.length > 0) {
+    //       setError(`Error parsing elevation STR: ${results.errors[0].message}`);
+    //       return;
+    //     }
+        
+    //     // Pass the data and projection to the parent component
+    //     onElevationDataUpload(results.data, projection);
+    //     setSuccess('Elevation data processed successfully!');
+    //   },
+    //   error: (error) => {
+    //     setIsLoading(false);
+    //     setError(`Error reading elevation file: ${error.message}`);
+    //   }
+    // });
+
+    //NEW
+    Papa.parse(elevationFile,{
+      // Don't use header: true since first row isn't a proper header
+      header: false,
       skipEmptyLines: true,
       dynamicTyping: true,
+      // Transform function to handle the specific format
+      transform: (value) => {
+        // Trim whitespace from each value
+        return value.trim();
+      },
       complete: (results) => {
-        setIsLoading(false);
         
         if (results.errors.length > 0) {
-          setError(`Error parsing elevation CSV: ${results.errors[0].message}`);
+          setError(`Error parsing elevation STR: ${results.errors[0].message}`);
           return;
         }
-        
-        // Pass the data and projection to the parent component
-        onElevationDataUpload(results.data, projection);
-        setSuccess('Elevation data processed successfully!');
-      },
-      error: (error) => {
-        setIsLoading(false);
-        setError(`Error reading elevation file: ${error.message}`);
-      }
+        // console.log('PREPROCESS 0', results);
+
+        // Skip the first row which contains "Topo_LiDAR_PL_smooth.dtm"
+        const dataRows = results.data.slice(1);
+        // console.log('PREPROCESS 1', dataRows);
+          
+        // Process each row into the required format
+        const processedData = dataRows
+          .filter(row => {
+            // Ensure row has enough columns and ID is 1
+            return row.length >= 4 && parseInt(row[0]) === 1;
+          })
+          .map(row => {
+            return {
+              id: 1, // Always set ID to 1 as requested
+              lat: parseFloat(row[1]) || 0,
+              lon: parseFloat(row[2]) || 0,
+              z: parseFloat(row[3]) || 0,
+              desc: row.length >= 5 ? row[4] : ''
+            };
+          });
+          // console.log('PREPROCESS 2', processedData.data);
+          // console.log('PREPROCESS 3', processedData);
+          onElevationDataUpload(processedData, projection);
+        },
+          error: (error) => {
+            setIsLoading(false);
+            setError(`Error reading elevation file: ${error.message}`);
+          }
     });
   };
+
+// Function to process LiDAR/topographic data with PapaParse
+
 
   const processPitFile = () => {
     if (!pitFile) {
@@ -200,10 +286,10 @@ const FileUploader = ({ onBlockModelUpload, onElevationDataUpload, onPitDataUplo
       </div>
       
       <div className="mb-4">
-        <label className="block mb-2 font-medium">Elevation Data CSV:</label>
+        <label className="block mb-2 font-medium">Elevation Data STR:</label>
         <input 
           type="file" 
-          accept=".csv" 
+          accept=".str" 
           onChange={handleElevationFileChange}
           className="block w-full text-sm border rounded p-2"
         />

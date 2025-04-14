@@ -1,10 +1,75 @@
 import proj4 from 'proj4';
 
 // Define common projections
+// const projections = {
+//   'EPSG:4326': '+proj=longlat +datum=WGS84 +no_defs', // WGS84
+//   'EPSG:32652': '+proj=utm +zone=52 +datum=WGS84 +units=m +no_defs', // UTM Zone 52
+//   // Add more projections as needed
+// };
+
 const projections = {
-  'EPSG:4326': '+proj=longlat +datum=WGS84 +no_defs', // WGS84
-  'EPSG:32652': '+proj=utm +zone=52 +datum=WGS84 +units=m +no_defs', // UTM Zone 52
-  // Add more projections as needed
+  // WGS84 (World Geodetic System 1984) - Base coordinate system
+  'EPSG:4326': '+proj=longlat +datum=WGS84 +no_defs',
+  
+  // UTM Zone 46 (North)
+  'EPSG:32646': '+proj=utm +zone=46 +datum=WGS84 +units=m +no_defs',
+  // UTM Zone 46 (South)
+  'EPSG:32746': '+proj=utm +zone=46 +south +datum=WGS84 +units=m +no_defs',
+  
+  // UTM Zone 47 (North)
+  'EPSG:32647': '+proj=utm +zone=47 +datum=WGS84 +units=m +no_defs',
+  // UTM Zone 47 (South)
+  'EPSG:32747': '+proj=utm +zone=47 +south +datum=WGS84 +units=m +no_defs',
+  
+  // UTM Zone 48 (North)
+  'EPSG:32648': '+proj=utm +zone=48 +datum=WGS84 +units=m +no_defs',
+  // UTM Zone 48 (South)
+  'EPSG:32748': '+proj=utm +zone=48 +south +datum=WGS84 +units=m +no_defs',
+  
+  // UTM Zone 49 (North)
+  'EPSG:32649': '+proj=utm +zone=49 +datum=WGS84 +units=m +no_defs',
+  // UTM Zone 49 (South)
+  'EPSG:32749': '+proj=utm +zone=49 +south +datum=WGS84 +units=m +no_defs',
+  
+  // UTM Zone 50 (North)
+  'EPSG:32650': '+proj=utm +zone=50 +datum=WGS84 +units=m +no_defs',
+  // UTM Zone 50 (South)
+  'EPSG:32750': '+proj=utm +zone=50 +south +datum=WGS84 +units=m +no_defs',
+  
+  // UTM Zone 51 (North)
+  'EPSG:32651': '+proj=utm +zone=51 +datum=WGS84 +units=m +no_defs',
+  // UTM Zone 51 (South)
+  'EPSG:32751': '+proj=utm +zone=51 +south +datum=WGS84 +units=m +no_defs',
+  
+  // UTM Zone 52 (North)
+  'EPSG:32652': '+proj=utm +zone=52 +datum=WGS84 +units=m +no_defs',
+  // UTM Zone 52 (South)
+  'EPSG:32752': '+proj=utm +zone=52 +south +datum=WGS84 +units=m +no_defs',
+  
+  // UTM Zone 53 (North)
+  'EPSG:32653': '+proj=utm +zone=53 +datum=WGS84 +units=m +no_defs',
+  // UTM Zone 53 (South)
+  'EPSG:32753': '+proj=utm +zone=53 +south +datum=WGS84 +units=m +no_defs',
+  
+  // UTM Zone 54 (North)
+  'EPSG:32654': '+proj=utm +zone=54 +datum=WGS84 +units=m +no_defs',
+  // UTM Zone 54 (South)
+  'EPSG:32754': '+proj=utm +zone=54 +south +datum=WGS84 +units=m +no_defs',
+  
+  // UTM Zone 55 (North)
+  'EPSG:32655': '+proj=utm +zone=55 +datum=WGS84 +units=m +no_defs',
+  // UTM Zone 55 (South)
+  'EPSG:32755': '+proj=utm +zone=55 +south +datum=WGS84 +units=m +no_defs',
+  
+  // UTM Zone 56 (North)
+  'EPSG:32656': '+proj=utm +zone=56 +datum=WGS84 +units=m +no_defs',
+  // UTM Zone 56 (South)
+  'EPSG:32756': '+proj=utm +zone=56 +south +datum=WGS84 +units=m +no_defs',
+  
+  // UTM Zone 57 (North)
+  'EPSG:32657': '+proj=utm +zone=57 +datum=WGS84 +units=m +no_defs',
+  // UTM Zone 57 (South)
+  'EPSG:32757': '+proj=utm +zone=57 +south +datum=WGS84 +units=m +no_defs'
 };
 
 /**

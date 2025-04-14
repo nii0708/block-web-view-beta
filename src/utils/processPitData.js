@@ -16,7 +16,7 @@ export const processPitDataToGeoJSON = (pitData, sourceProjection) => {
         return null;
       }
   
-      console.log(`Processing ${cleanData.length} pit boundary points with sourceProjection: ${sourceProjection}`);
+      // console.log(`Processing ${cleanData.length} pit boundary points with sourceProjection: ${sourceProjection}`);
   
       // Check if proj4 is available
       if (!window.proj4) {
@@ -57,7 +57,7 @@ export const processPitDataToGeoJSON = (pitData, sourceProjection) => {
   
       // Process each level to create LineStrings (matching Python logic)
       Object.entries(groupedByLevel).forEach(([level, coords]) => {
-        console.log(`Processing level ${level} with ${coords.length} points`);
+        // console.log(`Processing level ${level} with ${coords.length} points`);
   
         // Track coordinates similar to the Python code
         const coordList = [];
@@ -99,7 +99,7 @@ export const processPitDataToGeoJSON = (pitData, sourceProjection) => {
               // Store the level for this LineString
               levels.push(parseFloat(level));
   
-              console.log(`Created closed LineString at level ${level} with ${lineStringCoords.length} points`);
+              // console.log(`Created closed LineString at level ${level} with ${lineStringCoords.length} points`);
             }
   
             // Reset for the next line
@@ -134,7 +134,7 @@ export const processPitDataToGeoJSON = (pitData, sourceProjection) => {
           // Store the level for this LineString
           levels.push(parseFloat(level));
   
-          console.log(`Created open LineString at level ${level} with ${lineStringCoords.length} points`);
+          // console.log(`Created open LineString at level ${level} with ${lineStringCoords.length} points`);
         }
       });
   
@@ -144,12 +144,12 @@ export const processPitDataToGeoJSON = (pitData, sourceProjection) => {
         features: lineStrings
       };
   
-      console.log(`Created GeoJSON with ${lineStrings.length} LineString features across ${new Set(levels).size} levels`);
+      // console.log(`Created GeoJSON with ${lineStrings.length} LineString features across ${new Set(levels).size} levels`);
   
       // Sample the first few coordinates to verify
       if (lineStrings.length > 0 && lineStrings[0].geometry.coordinates.length > 0) {
         const sample = lineStrings[0].geometry.coordinates.slice(0, 3);
-        console.log('Sample WGS84 coordinates:', JSON.stringify(sample));
+        // console.log('Sample WGS84 coordinates:', JSON.stringify(sample));
       }
   
       return pitGeoJson;

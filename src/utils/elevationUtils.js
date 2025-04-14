@@ -2,11 +2,55 @@
 import Papa from 'papaparse';
 import { convertCoordinates } from './projectionUtils';
 
+// function processData(inputData) {
+//   // Split the input data into rows
+//   const dataRows = inputData.split('\n');
+  
+//   // Initialize array to store processed data
+//   const processedData = [];
+  
+//   // Skip the first line which contains "Topo_LiDAR_PL_smooth.dtm"
+//   // Process each row starting from the second line
+//   for (let i = 1; i < dataRows.length; i++) {
+//     const row = dataRows[i].trim();
+//     // Skip empty rows
+//     if (!row) continue;
+    
+//     // Split the row into columns
+//     const columns = row.split(',').map(col => col.trim());
+    
+//     // Check if this is a valid data row (should have at least 4 values)
+//     if (columns.length >= 4) {
+//       // Based on your example, it looks like the format is:
+//       // id, lat, long, z, [possibly additional values]
+//       const id = parseInt(columns[0]) || 0;
+      
+//       // Only process rows where id is 1 (as per your requirement)
+//       if (id === 1) {
+//         const dataPoint = {
+//           id: 1, // Always set id to 1 as requested
+//           lat: parseFloat(columns[1]) || 0,
+//           long: parseFloat(columns[2]) || 0,
+//           z: parseFloat(columns[3]) || 0,
+//           desc: columns[4] || '' // May be undefined if not present
+//         };
+        
+//         processedData.push(dataPoint);
+//       }
+//     }
+//   }
+  
+//   return processedData;
+// }
+
 export const processElevationData = (data, sourceProjection, lonField = 'x', latField = 'y', elevField = 'z') => {
   if (!data || data.length === 0) {
     console.warn('No elevation data to process');
     return [];
   }
+  // console.log('ORI ELEVATION :', data)
+  // data = processData(data)
+  // console.log('NEW ELEVATION :', data)
 
   return data.map((point, index) => {
     const x = parseFloat(point[lonField]);

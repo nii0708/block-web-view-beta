@@ -4,6 +4,7 @@ import * as d3 from 'd3';
 import { processBlockModelCSV } from '../utils/blockModelUtils';
 import { generateElevationProfile } from '../utils/elevationUtils';
 import { processPitDataToGeoJSON } from '../utils/processPitData';
+import * as turf from '@turf/turf';
 
 const CrossSection = ({ blockModelData, lineGeoJson, sourceProjection, elevationData, pitData }) => {
   const svgRef = useRef(null);
@@ -29,7 +30,7 @@ const CrossSection = ({ blockModelData, lineGeoJson, sourceProjection, elevation
       // Process the block model data into GeoJSON
       const geoJsonData = processBlockModelCSV(blockModelData, sourceProjection);
       setProcessedGeoJSON(geoJsonData);
-      console.log('Processed block model data into GeoJSON:', geoJsonData);
+      // console.log('Processed block model data into GeoJSON:', geoJsonData);
     } catch (error) {
       console.error('Error processing block model data:', error);
       setProcessedGeoJSON(null);
@@ -47,7 +48,7 @@ const CrossSection = ({ blockModelData, lineGeoJson, sourceProjection, elevation
       // Process the pit data to GeoJSON
       const pitGeoJson = processPitDataToGeoJSON(pitData, sourceProjection);
       setProcessedPitData(pitGeoJson);
-      console.log('Processed pit data into GeoJSON:', pitGeoJson);
+      // console.log('Processed pit data into GeoJSON:', pitGeoJson);
     } catch (error) {
       console.error('Error processing pit data:', error);
       setProcessedPitData(null);
@@ -65,7 +66,7 @@ const CrossSection = ({ blockModelData, lineGeoJson, sourceProjection, elevation
       // Generate elevation profile with 500 points along the line
       const profile = generateElevationProfile(elevationData, lineGeoJson, 500);
       setElevationProfile(profile);
-      console.log('Generated elevation profile with', profile.length, 'points');
+      // console.log('Generated elevation profile with', profile.length, 'points');
     } catch (error) {
       console.error('Error generating elevation profile:', error);
       setElevationProfile(null);
@@ -91,43 +92,75 @@ const CrossSection = ({ blockModelData, lineGeoJson, sourceProjection, elevation
       // Create our pit intersections array
       const intersections = [];
 
-      // Process each pit feature to find intersections with our line
+      // const intersectPitLine = turf.lineIntersect(processedPitData, lineGeoJson);
+      // console.log('intersectPitLine', intersectPitLine)
+
+      // OLD Process each pit feature to find intersections with our line
+      // processedPitData.features.forEach(feature => {
+      //   if (feature.geometry.type !== 'LineString') return;
+
+      //   const pitCoords = feature.geometry.coordinates;
+      //   const level = feature.properties.level;
+
+        
+      //   // Check each segment of the pit boundary for intersection
+      //   for (let i = 0; i < pitCoords.length - 1; i++) {
+      //     const intersection = findLineSegmentIntersection(
+      //       lineCoords[0][0], lineCoords[0][1],
+      //       lineCoords[1][0], lineCoords[1][1],
+      //       pitCoords[i][0], pitCoords[i][1],
+      //       pitCoords[i + 1][0], pitCoords[i + 1][1]
+      //     );
+
+      //     if (intersection) {
+      //       // Calculate distance from the start of our line
+      //       const dist = Math.sqrt(
+      //         Math.pow(intersection.x - lineCoords[0][0], 2) +
+      //         Math.pow(intersection.y - lineCoords[0][1], 2)
+      //       );
+      //       console.log('intesection point :',intersection.x, intersection.y)
+      //       intersections.push({
+      //         point: [intersection.x, intersection.y],
+      //         distance: dist,
+      //         elevation: level, // Use the pit boundary elevation
+      //         type: 'pit_boundary'
+      //       });
+      //     }
+      //   }
+      // });
+    
       processedPitData.features.forEach(feature => {
-        if (feature.geometry.type !== 'LineString') return;
+        // Convert line and ring to Turf line features
+        const ringLine = turf.lineString(feature.geometry.coordinates.map(coord => coord.slice(0, 2)));
+        // console.log('lineGeoJson :',lineGeoJson)
+        // console.log('ringLine :',ringLine)
+        // Find intersections
+        const intersectionPoints = turf.lineIntersect(ringLine, lineGeoJson);
+        // 
+        // Process intersections
+        if (intersectionPoints.features.length > 0) {
+          intersectionPoints.features.forEach(intersectionFeature => { //change feature to intersectionFeature for clarity.
+            const intersectionCoord = intersectionFeature.geometry; // get the geometry of each feature.
+            // console.log('intersectionPoints :', intersectionPoints);
+            // console.log('intersectionCoord :', intersectionCoord);
+            // console.log('intersectionCoord coordinates:', intersectionCoord.coordinates);
+            const dist = turf.distance(intersectionCoord.coordinates, lineCoords[0],{units: 'kilometers'})/100;
 
-        const pitCoords = feature.geometry.coordinates;
-        const level = feature.properties.level;
-
-        // Check each segment of the pit boundary for intersection
-        for (let i = 0; i < pitCoords.length - 1; i++) {
-          const intersection = findLineSegmentIntersection(
-            lineCoords[0][0], lineCoords[0][1],
-            lineCoords[1][0], lineCoords[1][1],
-            pitCoords[i][0], pitCoords[i][1],
-            pitCoords[i + 1][0], pitCoords[i + 1][1]
-          );
-
-          if (intersection) {
-            // Calculate distance from the start of our line
-            const dist = Math.sqrt(
-              Math.pow(intersection.x - lineCoords[0][0], 2) +
-              Math.pow(intersection.y - lineCoords[0][1], 2)
-            );
-
+            console.log('turf: ', dist)
             intersections.push({
-              point: [intersection.x, intersection.y],
+              point: intersectionCoord.coordinates,
               distance: dist,
-              elevation: level, // Use the pit boundary elevation
+              elevation: feature.properties.level, // Use the pit boundary elevation
               type: 'pit_boundary'
             });
-          }
+          });
         }
       });
-
+          
       // Sort intersections by distance
-      intersections.sort((a, b) => a.distance - b.distance);
+      // intersections.sort((a, b) => a.distance - b.distance);
 
-      console.log(`Found ${intersections.length} pit intersections`);
+      // console.log(`Found ${intersections.length} pit intersections`);
       setPitIntersections(intersections);
     } catch (error) {
       console.error('Error finding pit intersections:', error);
@@ -144,7 +177,7 @@ const CrossSection = ({ blockModelData, lineGeoJson, sourceProjection, elevation
 
     // Extract line coordinates (already in [lng, lat] format in GeoJSON)
     const lineCoords = lineGeoJson.geometry.coordinates;
-    console.log('Line coordinates for cross-section:', lineCoords);
+    // console.log('Line coordinates for cross-section:', lineCoords);
 
     if (lineCoords.length < 2) {
       setCrossSectionData(null);
@@ -279,7 +312,8 @@ const CrossSection = ({ blockModelData, lineGeoJson, sourceProjection, elevation
               feature.properties.dim_z || 1
             ],
             properties: {
-              rock: feature.properties.rock || 'unknown'
+              rock: feature.properties.rock || 'unknown',
+              color: feature.properties.color || '#FFFFFF'
             },
             // Distance to start of the block segment
             distance: entryPoint.distance,
@@ -294,7 +328,7 @@ const CrossSection = ({ blockModelData, lineGeoJson, sourceProjection, elevation
       }
     });
 
-    console.log(`Found ${intersectingBlocks.length} blocks that intersect with the cross-section line`);
+    // console.log(`Found ${intersectingBlocks.length} blocks that intersect with the cross-section line`);
 
     // Sort blocks by distance along the line
     intersectingBlocks.sort((a, b) => a.distance - b.distance);
@@ -525,11 +559,11 @@ const CrossSection = ({ blockModelData, lineGeoJson, sourceProjection, elevation
     const minElevation = allElevations.length > 0 ? Math.min(...allElevations) - 10 : 0;
     const maxElevation = allElevations.length > 0 ? Math.max(...allElevations) + 10 : 100;
 
-    console.log("data.lineLength", data.lineLength);
-    console.log("innerWidth", innerWidth);
-    console.log("minElevation", minElevation);
-    console.log("maxElevation", maxElevation);
-    console.log("innerHeight", innerHeight);
+    // console.log("data.lineLength", data.lineLength);
+    // console.log("innerWidth", innerWidth);
+    // console.log("minElevation", minElevation);
+    // console.log("maxElevation", maxElevation);
+    // console.log("innerHeight", innerHeight);
 
     // Create scales
     const xScale = d3.scaleLinear()
@@ -616,7 +650,7 @@ const CrossSection = ({ blockModelData, lineGeoJson, sourceProjection, elevation
           .datum(segment)
           .attr("fill", "none")
           .attr("stroke", "green")
-          .attr("stroke-width", 2)
+          .attr("stroke-width", 1)
           .attr("d", line);
 
         // For each segment, draw vertical lines down to zero for the start and end points
@@ -647,51 +681,6 @@ const CrossSection = ({ blockModelData, lineGeoJson, sourceProjection, elevation
       });
     }
 
-    // Draw pit boundary intersections
-    if (pitIntersections && pitIntersections.length > 0) {
-      // Create a path for all pit intersections
-      const pitLine = d3.line()
-        .x(d => xScale(d.distance))
-        .y(d => yScale(d.elevation))
-        .curve(d3.curveBasis);
-
-      // Group pit intersections if they're close to each other
-      const sortedIntersections = [...pitIntersections].sort((a, b) => a.distance - b.distance);
-      const pitSegments = [];
-      let currentSegment = [sortedIntersections[0]];
-
-      for (let i = 1; i < sortedIntersections.length; i++) {
-        const prev = sortedIntersections[i - 1];
-        const curr = sortedIntersections[i];
-
-        // If points are close enough, add to current segment
-        if (curr.distance - prev.distance < data.lineLength * 0.05) { // 5% of line length threshold
-          currentSegment.push(curr);
-        } else {
-          // Otherwise finish current segment and start a new one
-          pitSegments.push([...currentSegment]);
-          currentSegment = [curr];
-        }
-      }
-
-      // Add the last segment
-      if (currentSegment.length > 0) {
-        pitSegments.push(currentSegment);
-      }
-
-      // Draw each pit segment
-      pitSegments.forEach(segment => {
-        g.append("path")
-          .datum(segment)
-          .attr("fill", "none")
-          .attr("stroke", "#ff8c00")  // Orange for pit boundaries
-          .attr("stroke-width", 2)
-          .attr("stroke-dasharray", "5,5")
-          .attr("d", pitLine)
-          .append("title")
-          .text("Pit Boundary");
-      });
-    }
     // Add blocks to the visualization
     g.selectAll(".block")
       .data(blocks)
@@ -703,11 +692,7 @@ const CrossSection = ({ blockModelData, lineGeoJson, sourceProjection, elevation
       .attr("width", d => xScale(d.distance + d.width) - xScale(d.distance)) // Use the calculated width
       .attr("height", d => Math.abs(yScale(d.elevation - d.dimensions[2] / 2) - yScale(d.elevation + d.dimensions[2] / 2)))
       .attr("fill", d => {
-        // Use the same color scheme as in BlockModelViewer
-        const rockType = d.properties.rock;
-        if (rockType === 'sap') return '#ff0000'; // Red for ore
-        if (rockType === 'lim') return '#969696'; // Grey for waste
-        return '#3388ff'; // Default blue
+        return d.properties.color;
       })
       .attr("stroke", "black")
       .attr("stroke-width", 0.5)
@@ -716,6 +701,34 @@ const CrossSection = ({ blockModelData, lineGeoJson, sourceProjection, elevation
 
     // Add distance markers along the x-axis
     const blocksByDistance = d3.group(blocks, d => Math.floor(d.distance));
+
+        // Draw pit boundary intersections
+    if (pitIntersections && pitIntersections.length > 0) {
+      // Create a path for all pit intersections
+      const pitLine = d3.line()
+        .x(d => xScale(d.distance))
+        .y(d => yScale(d.elevation))
+        .curve(d3.curveLinear);
+
+      // Group pit intersections if they're close to each other
+      const sortedIntersections =  [...pitIntersections].sort((a, b) => a.distance - b.distance);
+      console.log('sortedIntersections :', sortedIntersections)
+
+      // TEST
+      const pitSegments = [sortedIntersections];
+
+      pitSegments.forEach(segment => {
+        g.append("path")
+          .datum(segment)
+          .attr("fill", "none")
+          .attr("stroke", "#F4AE4D")  // Orange for pit boundaries
+          .attr("stroke-width", 0.6)
+          // .attr("stroke-dasharray", "5,5")
+          .attr("d", pitLine)
+          .append("title")
+          .text("Pit Boundary");
+      });
+    }
 
     g.selectAll(".distance-marker")
       .data(Array.from(blocksByDistance.keys()))
@@ -732,19 +745,30 @@ const CrossSection = ({ blockModelData, lineGeoJson, sourceProjection, elevation
     // Create a unified legend
     const legendItems = [];
 
-    // Add rock types to legend
-    const rockTypes = [...new Set(blocks.map(b => b.properties.rock))];
-    rockTypes.forEach(rockType => {
-      let color = '#3388ff'; // Default blue
-      if (rockType === 'sap') color = '#ff0000'; // Red for ore
-      if (rockType === 'lim') color = '#969696'; // Grey for waste
-
-      legendItems.push({
-        label: rockType,
-        color: color,
-        type: 'rect'
-      });
+    // NEW  Add rock types to legend
+    const uniquePairs = new Set();
+    const uniquePairsArray = [];
+    
+    blocks.forEach(item => {
+      const rock = item.properties.rock;
+      const color = item.properties.color;
+      const pairString = `${rock}:${color}`;
+      
+      // Only add if this pair hasn't been seen before
+      if (!uniquePairs.has(pairString)) {
+        uniquePairs.add(pairString);
+        uniquePairsArray.push({ rock, color });
+      }
     });
+    
+    console.log('uniquePairsArray ',uniquePairsArray);
+    uniquePairsArray.forEach(d => {
+      legendItems.push({
+         label: d.rock,
+         color: d.color,
+         type: 'rect'
+       });
+     });
 
     // Add elevation profile to legend if available
     if (elevationProfile && elevationProfile.length > 0) {
@@ -760,10 +784,10 @@ const CrossSection = ({ blockModelData, lineGeoJson, sourceProjection, elevation
     if (pitIntersections && pitIntersections.length > 0) {
       legendItems.push({
         label: 'Pit Boundary',
-        color: '#ff8c00',
+        color: '#000000',
         type: 'line',
         size: 2,
-        dashed: true
+        dashed: false
       });
     }
 

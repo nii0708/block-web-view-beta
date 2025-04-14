@@ -28,7 +28,7 @@ const CrossSectionViewer = ({ geoJsonData, linePoints, onClose }) => {
     
     // Calculate the total distance of the line in meters
     const totalDistance = turf.length(line, { units: 'meters' });
-    console.log(`Total line distance: ${totalDistance.toFixed(2)} meters`);
+    // console.log(`Total line distance: ${totalDistance.toFixed(2)} meters`);
     
     // Sample points along the line
     const samplingDistance = 5; // meters between sample points
@@ -92,7 +92,7 @@ const CrossSectionViewer = ({ geoJsonData, linePoints, onClose }) => {
       };
     });
     
-    console.log('Profile data points:', profileData.length);
+    // console.log('Profile data points:', profileData.length);
     
     // Set up D3 visualization
     const width = 800;

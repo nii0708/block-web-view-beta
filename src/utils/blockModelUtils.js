@@ -49,8 +49,8 @@ export function createPolygonsFromCoordsAndDims(data, longCol, latCol, widthCol,
       
     // Log the first corner points for debugging
     if (index === 0) {
-      console.log('Original corners (first block):', corners);
-      console.log('Converted corners (first block):', convertedCorners);
+      // console.log('Original corners (first block):', corners);
+      // console.log('Converted corners (first block):', convertedCorners);
     }
     
     // Create a GeoJSON feature
@@ -107,11 +107,39 @@ export function removeDuplicateGeometries(featureCollection) {
  */
 export function processBlockModelCSV(data, sourceProjection = 'EPSG:4326') {
   try {
+
+      // Your provided hex colors
+  const hexColors = [
+    "#75499c", "#b40c0d", "#045993", "#db6000", "#118011", 
+    "#6d392e", "#c059a1", "#606060", "#9b9c07", "#009dad",
+    "#8ea6c5", "#db9a5a", "#78bd6b", "#db7876", "#a48fb3", 
+    "#a37c75", "#d495b0", "#a6a6a6", "#b9b96e", "#7eb8c2"
+  ];
+
+  // Function to create a color mapping for rock types
+  function createRockColorMapping(data, colors) {
+    // Extract unique rock types
+    const uniqueRockTypes = [...new Set(data.map(item => item.rock))];
+    
+    // Create mapping object
+    const rockColorMap = {};
+    
+    // Assign colors to rock types
+    uniqueRockTypes.forEach((rockType, index) => {
+      // Use modulo to handle cases with more rock types than colors
+      rockColorMap[rockType] = colors[index % colors.length];
+    });
+    
+    return rockColorMap;
+  }
+
+  // Create the mapping
+  const rockColorMap = createRockColorMapping(data, hexColors);
     // Log the number of rows being processed
-    console.log(`Processing ${data.length} rows with projection ${sourceProjection}`);
+    // console.log(`Processing ${data.length} rows with projection ${sourceProjection}`);
     
     // Log a sample of the data
-    console.log('Sample data row:', data[0]);
+    // console.log('Sample data row:', data[0]);
     
     // Filter to only the columns we need
     const filteredData = data.map(row => ({
@@ -121,7 +149,8 @@ export function processBlockModelCSV(data, sourceProjection = 'EPSG:4326') {
       dim_x: row.dim_x,
       dim_y: row.dim_y,
       dim_z: row.dim_z,
-      rock: row.rock
+      rock: row.rock,
+      color : rockColorMap[row.rock]
     }));
     
     // Create polygon features with projection conversion
@@ -135,7 +164,7 @@ export function processBlockModelCSV(data, sourceProjection = 'EPSG:4326') {
     );
     
     // Log number of features created
-    console.log(`Created ${polygons.features.length} GeoJSON features`);
+    // console.log(`Created ${polygons.features.length} GeoJSON features`);
     
     // Remove duplicates
     // const deduplicated = removeDuplicateGeometries(polygons);

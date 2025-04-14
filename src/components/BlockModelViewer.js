@@ -41,7 +41,7 @@ const FitBoundsToData = ({ geoJsonData }) => {
 
         if (bounds.isValid()) {
           map.fitBounds(bounds, { padding: [50, 50] });
-          console.log('Map fit to bounds:', bounds);
+          // console.log('Map fit to bounds:', bounds);
         } else {
           console.warn('Invalid bounds, cannot fit map');
         }
@@ -83,17 +83,17 @@ const BlockModelViewer = ({ blockModelData, pitData, sourceProjection = 'EPSG:43
 
   // Style function for the GeoJSON layer
   const blockModelStyle = (feature) => {
-    const rockType = feature.properties.rock;
-    let fillColor = '#3388ff'; // Default blue
+    // const rockType = feature.properties.rock;
+    // let fillColor = '#3388ff'; // Default blue
 
-    if (rockType === 'sap') {
-      fillColor = '#ff0000'; // Red for ore
-    } else if (rockType === 'lim') {
-      fillColor = '#969696'; // Grey for waste
-    }
+    // if (rockType === 'sap') {
+    //   fillColor = '#ff0000'; // Red for ore
+    // } else if (rockType === 'lim') {
+    //   fillColor = '#969696'; // Grey for waste
+    // }
 
     return {
-      fillColor: fillColor,
+      fillColor: feature.properties.color,
       weight: 1,
       opacity: 1,
       color: 'black',
@@ -149,7 +149,7 @@ const BlockModelViewer = ({ blockModelData, pitData, sourceProjection = 'EPSG:43
     if (updatedPoints.length === 2) {
       const newLineGeoJson = pointsToGeoJSONLine(updatedPoints);
       setLineGeoJson(newLineGeoJson);
-      console.log('Created GeoJSON line:', newLineGeoJson);
+      // console.log('Created GeoJSON line:', newLineGeoJson);
 
       // Notify parent component about the new line
       if (onLineCreated) {
@@ -158,7 +158,7 @@ const BlockModelViewer = ({ blockModelData, pitData, sourceProjection = 'EPSG:43
 
       // Calculate and log the line distance
       const distance = calculateLineDistance(updatedPoints);
-      console.log(`Line distance: ${distance.toFixed(2)} meters`);
+      // console.log(`Line distance: ${distance.toFixed(2)} meters`);
     } else if (updatedPoints.length < 2) {
       setLineGeoJson(null);
 
@@ -433,10 +433,10 @@ const BlockModelViewer = ({ blockModelData, pitData, sourceProjection = 'EPSG:43
           `;
                   layer.bindPopup(popupContent);
                 }
-                console.log("Added pit boundary feature to map:", feature);
+                // console.log("Added pit boundary feature to map:", feature);
               }}
               coordsToLatLng={(coords) => {
-                console.log("Converting pit coords to LatLng:", coords);
+                // console.log("Converting pit coords to LatLng:", coords);
                 return L.latLng(coords[1], coords[0]);
               }}
             />

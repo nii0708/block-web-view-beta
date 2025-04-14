@@ -12,13 +12,13 @@ export const blockModelToGeoJSON = (blockModelData, sourceProjection = 'EPSG:432
   }
   
   try {
-    console.log(`Processing data with projection: ${sourceProjection}`);
+    // console.log(`Processing data with projection: ${sourceProjection}`);
     
     // Process the data into GeoJSON with the specified projection
     const processedData = processBlockModelCSV(blockModelData, sourceProjection);
-    console.log("Processed GeoJSON data sample:", 
-      processedData.features.length > 0 ? processedData.features[0] : 'No features');
-    
+    // console.log("Processed GeoJSON data sample:", 
+      // processedData.features.length > 0 ? processedData.features[0] : 'No features');
+    console.log('DATA BLOCK',processedData)
     // Calculate initial map center if features are available
     let mapCenter = [0, 0];
     
